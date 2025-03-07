@@ -37,8 +37,8 @@ from gridtrader.trader.object import (
 from gridtrader.event import EVENT_TIMER, Event
 
 REST_HOST = "https://www.binance.com"
-WEBSOCKET_TRADE_HOST = "wss://stream.binance.com:9443/ws/"
-WEBSOCKET_DATA_HOST = "wss://stream.binance.com:9443/stream?streams="
+WEBSOCKET_TRADE_HOST = "wss://stream.binance.com:443/ws/"
+WEBSOCKET_DATA_HOST = "wss://stream.binance.com:443/stream?streams="
 
 STATUS_BINANCE2VT = {
     "NEW": Status.NOTTRADED,
