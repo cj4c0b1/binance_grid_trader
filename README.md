@@ -1,23 +1,143 @@
 # Binance Grid Trader
 
-Binance_grid_trader is a grid strategy bot trading with Binance Spot and
-Binance Future Exchange. you can use it to trade any pair in Binance
-Exchange.
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
+A high-performance grid trading bot for Binance Spot and Futures exchanges. This bot implements a grid trading strategy that automatically buys low and sells high within a defined price range.
 
-[中文文档](README-Chinese.md)
-[Portuguese](README-Portuguese.md)
+## 🌟 Features
 
-[Tutorial Video](https://www.youtube.com/watch?v=Z_BPaRnhNzM)
+- Support for both Spot and Futures trading on Binance
+- Customizable grid trading parameters
+- Real-time market data processing
+- Risk management tools
+- Comprehensive logging and monitoring
+- User-friendly web interface
+- Backtesting capabilities
+- Multiple trading pairs support
+- Configurable order types (limit/market)
+- Stop-loss and take-profit functionality
 
+## 📦 Installation
 
-# how-to-use
-First, download the codes. Then create a python virtual env, you can use
-the anaconda to create the env.
-> conda create -n trader python==3.7
+### Prerequisites
+- Python 3.8 or higher
+- Binance API key with trading permissions
+- pip (Python package manager)
 
-then you have an env(trader), to use this env, you can use the following
-command to activate the env.
+### Quick Start
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/cj4c0b1/binance_grid_trader.git
+   cd binance_grid_trader
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Install development dependencies (optional):
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+5. Set up pre-commit hooks (recommended):
+   ```bash
+   pre-commit install
+   ```
+
+## ⚙️ Configuration
+
+1. Copy the example configuration file:
+   ```bash
+   cp config.example.json config.json
+   ```
+
+2. Edit `config.json` with your Binance API credentials and trading parameters.
+
+## 🚀 Usage
+
+### Starting the Bot
+
+```bash
+python main.py
+```
+
+### Running Strategies
+
+#### Spot Trading
+```bash
+python main_spot_script.py
+```
+
+#### Futures Trading
+```bash
+python main_futures_script.py
+```
+
+## 📊 Strategy Configuration
+
+Configure your trading strategy in the `config.json` file. Here's an example configuration:
+
+```json
+{
+  "api_key": "YOUR_API_KEY",
+  "api_secret": "YOUR_API_SECRET",
+  "symbol": "BTCUSDT",
+  "grid_levels": 10,
+  "upper_price": 50000,
+  "lower_price": 30000,
+  "order_amount": 0.001,
+  "leverage": 5,
+  "strategy": "grid",
+  "test_mode": true
+}
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to contribute to this project.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📚 Documentation
+
+- [API Documentation](https://binance-docs.github.io/apidocs/)
+- [Strategy Guide](docs/STRATEGY_GUIDE.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+
+## 📞 Support
+
+For support, please open an issue or join our [Discord community](https://discord.gg/your-discord-link).
+
+## 📝 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a list of notable changes.
+
+---
+
+<div align="center">
+  <p>Built with ❤️ by the Binance Grid Trader community</p>
+  <p>Not affiliated with Binance. Use at your own risk.</p>
+</div>
 
 > conda activate trader
 

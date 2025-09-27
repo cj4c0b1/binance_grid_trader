@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=42.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.towncrier]
+package = "binance_grid_trader"
+package_dir = "."
+filename = "CHANGELOG.md"
+directory = "changes"
+underlines = ["", "", "", ""]
+title_format = "## {version} ({project_date})"
+template = "changelog_template.md"
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "Features"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "bugfix"
+name = "Bugfixes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "doc"
+name = "Documentation"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "misc"
+name = "Miscellaneous"
+showcontent = false
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-v --cov=binance_grid_trader --cov-report=term-missing"
+
+[coverage:run]
+source = ["binance_grid_trader"]
+omit = ["tests/*"]
+
+[coverage:report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
+    @abstractmethod
+    @property
+    def __
+    raise NotImplemented
+    @abstractproperty

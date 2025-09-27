@@ -169,5 +169,27 @@ log.txt
 
 /gridtrader/log/*
 
+# Connection configs and credentials
+gridtrader/connect_*.json
+*.json.enc
 
+# Development and environment files
+.env
+.env.*
+!.env.example
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
 

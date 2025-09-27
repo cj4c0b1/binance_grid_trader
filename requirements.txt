@@ -1,7 +1,7 @@
 requests
 websocket-client
 qdarkstyle
-PyQt5==5.15.2
+PyQt5>=5.15.10
 tzlocal==2.1
 six==1.13.0
 wheel
