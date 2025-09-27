@@ -59,7 +59,7 @@ class FutureGridStrategy(CtaTemplate):
 
     def on_init(self):
         """
-        Callback when strategy is inited.
+        Callback when strategy is initialized.
         """
         self.write_log("Init Strategy")
 
@@ -72,9 +72,9 @@ class FutureGridStrategy(CtaTemplate):
 
         if not self.contract_data:
             self.write_log(f"Could Not Find The Symbol:{self.vt_symbol}, Please Connect the Api First.")
-            self.inited = False
+            self.initialized = False
         else:
-            self.inited = True
+            self.initialized = True
 
         self.pos_calculator.pos = self.pos
         self.pos_calculator.avg_price = self.avg_price

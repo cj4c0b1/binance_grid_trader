@@ -27,14 +27,14 @@ class CtaTemplate(ABC):
         self.strategy_name = strategy_name
         self.vt_symbol = vt_symbol
 
-        self.inited = False
+        self.initialized = False
         self.trading = False
         self.pos = 0
 
         # Copy a new variables list here to avoid duplicate insert when multiple
         # strategy instances are created with the same strategy class.
         self.variables = copy(self.variables)
-        self.variables.insert(0, "inited")
+        self.variables.insert(0, "initialized")
         self.variables.insert(1, "trading")
         self.variables.insert(2, "pos")
 
@@ -93,7 +93,7 @@ class CtaTemplate(ABC):
     @virtual
     def on_init(self):
         """
-        Callback when strategy is inited.
+        Callback when strategy is initialized.
         """
         pass
 

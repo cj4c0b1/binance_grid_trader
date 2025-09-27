@@ -486,7 +486,7 @@ class StrategyManager(QtWidgets.QFrame):
         self.setFrameShape(self.Box)
         self.setLineWidth(1)
 
-        self.init_button = QtWidgets.QPushButton("Init")
+        self.init_button = QtWidgets.QPushButton("Initialize")
         self.init_button.clicked.connect(self.init_strategy)
 
         self.start_button = QtWidgets.QPushButton("Start")

@@ -570,7 +570,7 @@ class CtaEngine(BaseEngine):
             return
 
         for strategy in strategies:
-            if strategy.inited:
+            if strategy.initialized:
                 self.call_strategy_func(strategy, strategy.on_tick, tick)
 
     def process_order_event(self, event: Event):
@@ -754,7 +754,7 @@ class CtaEngine(BaseEngine):
             else:
                 func()
         except Exception:
-            strategy.inited = False
+            strategy.initialized = False
             strategy.trading = False
 
             msg = f"Strategy Error: {traceback.format_exc()}"
@@ -826,7 +826,7 @@ class CtaEngine(BaseEngine):
             self.write_log(f"Subscribe Market Data Failed，Symbol Not Found {strategy.vt_symbol}", strategy)
 
         # Put event to update init completed status.
-        strategy.inited = True
+        strategy.initialized = True
         self.put_strategy_event(strategy)
         self.write_log(f"{strategy_name} Initialized.")
 
@@ -835,7 +835,7 @@ class CtaEngine(BaseEngine):
         Start a strategy.
         """
         strategy = self.strategies[strategy_name]
-        if not strategy.inited:
+        if not strategy.initialized:
             self.write_log(f"Strategy {strategy.strategy_name} Start Failed，Please Init First.")
             return
 
@@ -916,7 +916,7 @@ class CtaEngine(BaseEngine):
         Sync strategy data into json file.
         """
         data = strategy.get_variables()
-        data.pop("inited")  # Strategy status (inited, trading) should not be synced.
+        data.pop("initialized")  # Strategy status (initialized, trading) should not be synced.
         data.pop("trading")
 
         self.strategy_data[strategy.strategy_name] = data
