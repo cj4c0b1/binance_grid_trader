@@ -1,7 +1,8 @@
 from typing import Union, Optional
+from decimal import Decimal, ROUND_DOWN
 from gridtrader.trader.engine import CtaEngine, EVENT_TIMER, EVENT_ACCOUNT
 from gridtrader.trader.object import Status
-from gridtrader.trader.utility import floor_to
+from gridtrader.trader.utility import floor_to, round_to
 from gridtrader.trader.object import OrderData, TickData, TradeData, ContractData, AccountData
 from .template import CtaTemplate
 from gridtrader.trader.utility import GridPositionCalculator, extract_vt_symbol
@@ -201,29 +202,94 @@ class SpotGridStrategy(CtaTemplate):
             mid_count = round((float(self.tick.bid_price_1) - self.bottom_price) / self.step_price)
 
             if len(self.long_orders_dict.keys()) == 0:
-
+                # Get tick size and precision from contract data
+                tick_size = Decimal(str(self.contract_data.price_tick))
+                price_precision = abs(Decimal(str(tick_size)).as_tuple().exponent)
+                
                 for i in range(self.max_open_orders):
                     price = self.bottom_price + (mid_count - i - 1) * self.step_price
                     if price < self.bottom_price:
                         return
 
+                    # Format price according to Binance's price filter rules
+                    tick_size = float(tick_size)
+                    precision = len(str(tick_size).split('.')[1]) if '.' in str(tick_size) else 0
+                    rounded_price = round(price / tick_size) * tick_size
+                    # Ensure we don't have any floating point precision issues
+                    rounded_price = float(f"{rounded_price:.{precision}f}")
+                    
+                    # Log detailed price information for debugging
+                    self.write_log(
+                        f"BUY Order - Original: {price:.8f}, "
+                        f"Tick: {tick_size}, "
+                        f"Precision: {precision}, "
+                        f"Rounded: {rounded_price:.8f}, "
+                        f"Diff: {abs(price - rounded_price):.10f}"
+                    )
+
                     account: Optional[AccountData] = self.get_invest_coin_balance()
-                    if account and account.available >= (price * self.order_volume) >= 10:
-                        orders_ids = self.buy(price, self.order_volume)
-                        for orderid in orders_ids:
-                            self.long_orders_dict[orderid] = price
+                    if account and account.available >= (rounded_price * self.order_volume) >= 10:
+                        self.write_log(f"Placing BUY order - Price: {rounded_price}")
+                        try:
+                            orders_ids = self.buy(rounded_price, self.order_volume)
+                            if orders_ids:
+                                for orderid in orders_ids:
+                                    self.long_orders_dict[orderid] = rounded_price
+                                self.write_log(f"BUY order placed successfully at {rounded_price}")
+                            else:
+                                self.write_log("Error: No order ID returned from buy()")
+                        except Exception as e:
+                            self.write_log(f"Error placing BUY order: {str(e)}")
+                    else:
+                        self.write_log(
+                            f"Insufficient balance for BUY order - "
+                            f"Available: {getattr(account, 'available', 0):.8f}, "
+                            f"Required: {rounded_price * self.order_volume:.8f}"
+                        )
 
             if len(self.short_orders_dict.keys()) == 0:
+                # Get tick size and precision from contract data
+                tick_size = Decimal(str(self.contract_data.price_tick))
+                price_precision = abs(Decimal(str(tick_size)).as_tuple().exponent)
+                
                 for i in range(self.max_open_orders):
                     price = self.bottom_price + (mid_count + i + 1) * self.step_price
                     if price > self.upper_price:
                         return
 
+                    # Round price to contract's tick size and precision
+                    rounded_price = round(price, price_precision)
+                    rounded_price = float(Decimal(str(rounded_price)).quantize(
+                        Decimal(str(tick_size)), rounding=ROUND_DOWN
+                    ))
+                    
+                    # Log detailed price information for debugging
+                    self.write_log(
+                        f"SELL Order - Original: {price:.8f}, "
+                        f"Tick: {tick_size}, "
+                        f"Rounded: {rounded_price:.8f}, "
+                        f"Diff: {price-rounded_price:.10f}"
+                    )
+
                     account: Optional[AccountData] = self.get_trade_coin_balance()
                     if account and account.available >= self.order_volume:
-                        orders_ids = self.sell(price, self.order_volume)
-                        for orderid in orders_ids:
-                            self.short_orders_dict[orderid] = price
+                        self.write_log(f"Placing SELL order - Price: {rounded_price}")
+                        try:
+                            orders_ids = self.sell(rounded_price, self.order_volume)
+                            if orders_ids:
+                                for orderid in orders_ids:
+                                    self.short_orders_dict[orderid] = rounded_price
+                                self.write_log(f"SELL order placed successfully at {rounded_price}")
+                            else:
+                                self.write_log("Error: No order ID returned from sell()")
+                        except Exception as e:
+                            self.write_log(f"Error placing SELL order: {str(e)}")
+                    else:
+                        self.write_log(
+                            f"Insufficient balance for SELL order - "
+                            f"Available: {getattr(account, 'available', 0):.8f}, "
+                            f"Required: {self.order_volume:.8f}"
+                        )
 
     def on_order(self, order: OrderData):
         """
@@ -242,43 +308,105 @@ class SpotGridStrategy(CtaTemplate):
 
                 self.trade_times += 1
 
+                # Calculate and round the short price
+                tick_size = Decimal(str(self.contract_data.price_tick))
+                price_precision = abs(Decimal(str(tick_size)).as_tuple().exponent)
+                
                 short_price = float(order.price) + float(self.step_price)
+                rounded_short_price = round(short_price, price_precision)
+                rounded_short_price = float(Decimal(str(rounded_short_price)).quantize(
+                    Decimal(str(tick_size)), rounding=ROUND_DOWN
+                ))
 
-                if short_price <= self.upper_price:
-
-                    orders_ids = self.sell(short_price, self.order_volume)
-
-                    for orderid in orders_ids:
-                        self.short_orders_dict[orderid] = short_price
+                if rounded_short_price <= self.upper_price:
+                    self.write_log(f"Placing SELL order at {rounded_short_price} (Original: {short_price})")
+                    try:
+                        orders_ids = self.sell(rounded_short_price, self.order_volume)
+                        if orders_ids:
+                            for orderid in orders_ids:
+                                self.short_orders_dict[orderid] = rounded_short_price
+                            self.write_log(f"SELL order placed successfully at {rounded_short_price}")
+                        else:
+                            self.write_log("Error: No order ID returned from sell()")
+                    except Exception as e:
+                        self.write_log(f"Error placing SELL order: {str(e)}")
 
                 if len(self.long_orders_dict.keys()) < self.max_open_orders:
                     count = len(self.long_orders_dict.keys()) + 1
+                    # Calculate and round the long price
+                    tick_size = Decimal(str(self.contract_data.price_tick))
+                    price_precision = abs(Decimal(str(tick_size)).as_tuple().exponent)
+                    
                     long_price = float(order.price) - float(self.step_price) * count
+                    rounded_long_price = round(long_price, price_precision)
+                    rounded_long_price = float(Decimal(str(rounded_long_price)).quantize(
+                        Decimal(str(tick_size)), rounding=ROUND_DOWN
+                    ))
 
-                    if long_price >= self.bottom_price:
-                        orders_ids = self.buy(long_price, self.order_volume)
-                        for orderid in orders_ids:
-                            self.long_orders_dict[orderid] = long_price
+                    if rounded_long_price >= self.bottom_price:
+                        self.write_log(f"Placing BUY order at {rounded_long_price} (Original: {long_price})")
+                        try:
+                            orders_ids = self.buy(rounded_long_price, self.order_volume)
+                            if orders_ids:
+                                for orderid in orders_ids:
+                                    self.long_orders_dict[orderid] = rounded_long_price
+                                self.write_log(f"BUY order placed successfully at {rounded_long_price}")
+                            else:
+                                self.write_log("Error: No order ID returned from buy()")
+                        except Exception as e:
+                            self.write_log(f"Error placing BUY order: {str(e)}")
 
             if order.vt_orderid in self.short_orders_dict.keys():
                 del self.short_orders_dict[order.vt_orderid]
 
                 self.trade_times += 1
+                # Calculate and round the long price
+                tick_size = Decimal(str(self.contract_data.price_tick))
+                price_precision = abs(Decimal(str(tick_size)).as_tuple().exponent)
+                
                 long_price = float(order.price) - float(self.step_price)
+                rounded_long_price = round(long_price, price_precision)
+                rounded_long_price = float(Decimal(str(rounded_long_price)).quantize(
+                    Decimal(str(tick_size)), rounding=ROUND_DOWN
+                ))
 
-                if long_price >= self.bottom_price:
-                    orders_ids = self.buy(long_price, self.order_volume)
-                    for orderid in orders_ids:
-                        self.long_orders_dict[orderid] = long_price
+                if rounded_long_price >= self.bottom_price:
+                    self.write_log(f"Placing BUY order at {rounded_long_price} (Original: {long_price})")
+                    try:
+                        orders_ids = self.buy(rounded_long_price, self.order_volume)
+                        if orders_ids:
+                            for orderid in orders_ids:
+                                self.long_orders_dict[orderid] = rounded_long_price
+                            self.write_log(f"BUY order placed successfully at {rounded_long_price}")
+                        else:
+                            self.write_log("Error: No order ID returned from buy()")
+                    except Exception as e:
+                        self.write_log(f"Error placing BUY order: {str(e)}")
 
                 if len(self.short_orders_dict.keys()) < self.max_open_orders:
                     count = len(self.short_orders_dict.keys()) + 1
+                    # Calculate and round the short price
+                    tick_size = Decimal(str(self.contract_data.price_tick))
+                    price_precision = abs(Decimal(str(tick_size)).as_tuple().exponent)
+                    
                     short_price = float(order.price) + float(self.step_price) * count
+                    rounded_short_price = round(short_price, price_precision)
+                    rounded_short_price = float(Decimal(str(rounded_short_price)).quantize(
+                        Decimal(str(tick_size)), rounding=ROUND_DOWN
+                    ))
 
-                    if short_price <= self.upper_price:
-                        orders_ids = self.sell(short_price, self.order_volume)
-                        for orderid in orders_ids:
-                            self.short_orders_dict[orderid] = short_price
+                    if rounded_short_price <= self.upper_price:
+                        self.write_log(f"Placing SELL order at {rounded_short_price} (Original: {short_price})")
+                        try:
+                            orders_ids = self.sell(rounded_short_price, self.order_volume)
+                            if orders_ids:
+                                for orderid in orders_ids:
+                                    self.short_orders_dict[orderid] = rounded_short_price
+                                self.write_log(f"SELL order placed successfully at {rounded_short_price}")
+                            else:
+                                self.write_log("Error: No order ID returned from sell()")
+                        except Exception as e:
+                            self.write_log(f"Error placing SELL order: {str(e)}")
 
         if not order.is_active():
             if order.vt_orderid in self.long_orders_dict.keys():
