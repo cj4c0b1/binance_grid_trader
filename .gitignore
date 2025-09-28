@@ -30,6 +30,16 @@ MANIFEST
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
+
+# Sensitive configuration files
+gridtrader/connect_spot.json
+gridtrader/connect_futures.json
+gridtrader/grid_strategy_data.json
+gridtrader/grid_strategy_setting.json
+*.json
+!*.example.json
+!requirements*.txt
+!pyproject.toml
 *.manifest
 *.spec
 
